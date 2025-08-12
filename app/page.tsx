@@ -8,7 +8,13 @@ import { Calculator, Plus } from "lucide-react"
 import { MedicationForm } from "@/components/algorithms/mci/medication-form"
 import { ResultsDisplay } from "@/components/algorithms/mci/results-display"
 import { calculateMedicationScore } from "@/lib/algorithms/mci/scoring"
-import { AVAILABLE_ALGORITHMS, type AlgorithmId, type MCIResult } from "@/lib/algorithms"
+// import { AVAILABLE_ALGORITHMS, type AlgorithmId, type MCIResult } from "@/lib/algorithms"
+import { 
+  AVAILABLE_ALGORITHMS,
+  ALGORITHM_COPY,
+  type AlgorithmId,
+  type MCIResult,
+} from "@/lib/algorithms";
 
 export interface Medication {
   id: string
@@ -20,6 +26,7 @@ export interface Medication {
 
 export default function HomePage() {
   const [activeAlgorithm, setActiveAlgorithm] = useState<AlgorithmId>("mci")
+  const current = ALGORITHM_COPY[activeAlgorithm];
   const [medications, setMedications] = useState<Medication[]>([
     { id: "1", name: "", dosageForm: "", frequency: "", instructions: [] }
   ])
@@ -196,11 +203,8 @@ export default function HomePage() {
               <p className="text-lg text-gray-600">Clinical Decision Support Tools</p>
             </div>
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-3">Medication Complexity Index (MCI)</h2>
-              <p className="text-gray-600 leading-relaxed">
-                Assess medication regimen complexity to support clinical decision-making and identify patients who may benefit from
-                medication management interventions.
-              </p>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-3">{current.title}</h2>
+              <p className="text-gray-600 leading-relaxed">{current.description}</p>
             </div>
           </div>
         </div>
@@ -209,11 +213,12 @@ export default function HomePage() {
       {/* Algorithm Navigation */}
       <div className="bg-white border-b">
         <div className="container mx-auto px-6 py-4 max-w-7xl">
+          
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {AVAILABLE_ALGORITHMS.map(algorithm => (
               <Badge
                 key={algorithm.id}
-                className={`px-4 py-3 font-medium text-center justify-center cursor-pointer transition-colors ${
+                className={`w-full px-4 py-3 font-medium text-center justify-center cursor-pointer transition-colors ${
                   activeAlgorithm === algorithm.id
                     ? "bg-blue-600 hover:bg-blue-700 text-white"
                     : algorithm.implemented
@@ -227,6 +232,7 @@ export default function HomePage() {
               </Badge>
             ))}
           </div>
+
         </div>
       </div>
 
