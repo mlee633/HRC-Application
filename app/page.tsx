@@ -8,13 +8,14 @@ import { Calculator, Plus } from "lucide-react"
 import { MedicationForm } from "@/components/algorithms/mci/medication-form"
 import { ResultsDisplay } from "@/components/algorithms/mci/results-display"
 import { calculateMedicationScore } from "@/lib/algorithms/mci/scoring"
-// import { AVAILABLE_ALGORITHMS, type AlgorithmId, type MCIResult } from "@/lib/algorithms"
-import { 
+import MCIExcelActions from "@/components/excel/MCIExcelActions"
+
+import {
   AVAILABLE_ALGORITHMS,
   ALGORITHM_COPY,
   type AlgorithmId,
   type MCIResult,
-} from "@/lib/algorithms";
+} from "@/lib/algorithms"
 
 export interface Medication {
   id: string
@@ -25,10 +26,14 @@ export interface Medication {
 }
 
 export default function HomePage() {
+  const mapSex = (s: string): "M" | "F" | "Other" =>
+    s === "Male" ? "M" : s === "Female" ? "F" : "Other"
+
   const [activeAlgorithm, setActiveAlgorithm] = useState<AlgorithmId>("mci")
-  const current = ALGORITHM_COPY[activeAlgorithm];
+  const current = ALGORITHM_COPY[activeAlgorithm]
+
   const [medications, setMedications] = useState<Medication[]>([
-    { id: "1", name: "", dosageForm: "", frequency: "", instructions: [] }
+    { id: "1", name: "", dosageForm: "", frequency: "", instructions: [] },
   ])
   const [results, setResults] = useState<MCIResult | null>(null)
   const [isCalculating, setIsCalculating] = useState(false)
@@ -42,14 +47,14 @@ export default function HomePage() {
     sex: "",
     ethnicity: "",
     medicalConditions: "",
-    deprivationScore: ""
+    deprivationScore: "",
   })
 
   const handleDemographicsChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target
-    setDemographics(prev => ({ ...prev, [name]: value }))
+    setDemographics((prev) => ({ ...prev, [name]: value }))
   }
 
   const clearDemographics = () => {
@@ -61,7 +66,7 @@ export default function HomePage() {
       sex: "",
       ethnicity: "",
       medicalConditions: "",
-      deprivationScore: ""
+      deprivationScore: "",
     })
   }
 
@@ -120,17 +125,21 @@ export default function HomePage() {
       name: "",
       dosageForm: "",
       frequency: "",
-      instructions: []
+      instructions: [],
     }
-    setMedications(prev => [...prev, newMedication])
+    setMedications((prev) => [...prev, newMedication])
   }
 
   const removeMedication = (id: string) => {
-    setMedications(prev => (prev.length > 1 ? prev.filter(m => m.id !== id) : prev))
+    setMedications((prev) =>
+      prev.length > 1 ? prev.filter((m) => m.id !== id) : prev
+    )
   }
 
   const updateMedication = (id: string, updates: Partial<Medication>) => {
-    setMedications(prev => prev.map(m => (m.id === id ? { ...m, ...updates } : m)))
+    setMedications((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, ...updates } : m))
+    )
   }
 
   const clearAllMedications = () => {
@@ -141,12 +150,16 @@ export default function HomePage() {
   // ---- Calculation ----
   const calculateMCI = async () => {
     setIsCalculating(true)
-    await new Promise(resolve => setTimeout(resolve, 800))
+    await new Promise((resolve) => setTimeout(resolve, 800))
 
     const medicationResults = medications
-      .filter(m => m.name.trim() !== "" && m.dosageForm && m.frequency)
-      .map(m => {
-        const scores = calculateMedicationScore(m.dosageForm, m.frequency, m.instructions)
+      .filter((m) => m.name.trim() !== "" && m.dosageForm && m.frequency)
+      .map((m) => {
+        const scores = calculateMedicationScore(
+          m.dosageForm,
+          m.frequency,
+          m.instructions
+        )
         return {
           id: m.id,
           name: m.name,
@@ -154,16 +167,18 @@ export default function HomePage() {
           breakdown: {
             dosageForm: scores.dosageFormScore,
             frequency: scores.frequencyScore,
-            instructions: scores.instructionsScore
-          }
+            instructions: scores.instructionsScore,
+          },
         }
       })
 
     const totalScore = medicationResults.reduce((sum, m) => sum + m.score, 0)
 
     const getComplexityLevel = (score: number) => {
-      if (score <= 5) return { level: "Low" as const, description: "Simple medication regimen" }
-      if (score <= 10) return { level: "Moderate" as const, description: "Moderately complex regimen" }
+      if (score <= 5)
+        return { level: "Low" as const, description: "Simple medication regimen" }
+      if (score <= 10)
+        return { level: "Moderate" as const, description: "Moderately complex regimen" }
       return { level: "High" as const, description: "Complex medication regimen" }
     }
 
@@ -173,23 +188,34 @@ export default function HomePage() {
       totalScore,
       riskLevel: complexity.level,
       description: complexity.description,
-      medications: medicationResults
+      medications: medicationResults,
     })
 
     setIsCalculating(false)
   }
 
   const hasValidMedications = medications.some(
-    m => m.name.trim() !== "" && m.dosageForm && m.frequency
+    (m) => m.name.trim() !== "" && m.dosageForm && m.frequency
   )
 
   const handleAlgorithmChange = (algorithmId: AlgorithmId) => {
-    const algorithm = AVAILABLE_ALGORITHMS.find(alg => alg.id === algorithmId)
+    const algorithm = AVAILABLE_ALGORITHMS.find((alg) => alg.id === algorithmId)
     if (algorithm?.implemented) {
       setActiveAlgorithm(algorithmId)
-      // keep your meds-only clear on algorithm switch
       clearAllMedications()
     }
+  }
+
+  // ---- Build patient object for Excel ----
+  const currentPatient = {
+    patientId: demographics.patientId || "",
+    name: [demographics.firstName, demographics.lastName].filter(Boolean).join(" "),
+    age: demographics.age ? Number(demographics.age) : 0,   // fallback to 0
+    sex: mapSex(demographics.sex),
+    ethnicity: demographics.ethnicity || "",
+    dateOfParticipation: new Date().toISOString().split("T")[0],
+    overallMRCI: results?.totalScore ?? 0,                 // fallback to 0
+    severityMRCI: results?.riskLevel ?? "Low",             // fallback to Low
   }
 
   return (
@@ -203,7 +229,9 @@ export default function HomePage() {
               <p className="text-lg text-gray-600">Clinical Decision Support Tools</p>
             </div>
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-3">{current.title}</h2>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-3">
+                {current.title}
+              </h2>
               <p className="text-gray-600 leading-relaxed">{current.description}</p>
             </div>
           </div>
@@ -213,9 +241,8 @@ export default function HomePage() {
       {/* Algorithm Navigation */}
       <div className="bg-white border-b">
         <div className="container mx-auto px-6 py-4 max-w-7xl">
-          
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {AVAILABLE_ALGORITHMS.map(algorithm => (
+            {AVAILABLE_ALGORITHMS.map((algorithm) => (
               <Badge
                 key={algorithm.id}
                 className={`w-full px-4 py-3 font-medium text-center justify-center cursor-pointer transition-colors ${
@@ -232,7 +259,6 @@ export default function HomePage() {
               </Badge>
             ))}
           </div>
-
         </div>
       </div>
 
@@ -341,12 +367,12 @@ export default function HomePage() {
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">Select</option>
-                  <option value="0">0</option>
+                  <option value="0">0 Least</option>
                   <option value="1">1</option>
                   <option value="2">2</option>
                   <option value="3">3</option>
                   <option value="4">4</option>
-                  <option value="5">5</option>
+                  <option value="5">5 Most</option>
                 </select>
               </div>
             </div>
@@ -412,28 +438,36 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Results */}
+              {/* Results + Excel Actions */}
               <div>
                 <ResultsDisplay results={results} isCalculating={isCalculating} />
+                <MCIExcelActions currentPatient={currentPatient} />
               </div>
             </>
           )}
         </div>
 
-        {/* Footer */}
+        {/* Footer + Save as PDF */}
         <div className="mt-12">
           <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
             <p className="text-gray-600 text-sm leading-relaxed">
-              <strong>Disclaimer:</strong> This tool is for educational and research purposes only. Results should be interpreted by qualified
-              healthcare professionals. Always consult with healthcare providers for clinical decisions and patient care.
+              <strong>Disclaimer:</strong> This tool is for educational and research
+              purposes only. Results should be interpreted by qualified healthcare
+              professionals. Always consult with healthcare providers for clinical
+              decisions and patient care.
             </p>
           </div>
         </div>
 
-        {/* Fixed Save as PDF Button */}
         <button
           onClick={handleSaveAsPDF}
-          style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 50, boxShadow: "0 2px 12px rgba(0,0,0,0.10)" }}
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            zIndex: 50,
+            boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
+          }}
           className="bg-blue-600 text-white rounded-full px-5 py-3 font-medium hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           Save as PDF
@@ -442,4 +476,3 @@ export default function HomePage() {
     </div>
   )
 }
-
