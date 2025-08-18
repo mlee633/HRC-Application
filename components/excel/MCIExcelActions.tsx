@@ -4,69 +4,74 @@
 import { useState } from "react";
 
 type PatientPayload = {
-  patientId?: string;
-  name: string;
-  age: number;
-  sex: "M" | "F" | "Other";
-  ethnicity?: string;
-  dateOfParticipation?: string;
-  overallMRCI?: number;
-  severityMRCI?: string;
-};
+  patientId?: string
+  name: string
+  age: number
+  sex: "M" | "F" | "Other"
+  ethnicity?: string
+  dateOfParticipation: string
+  overallMRCI?: number
+  severityMRCI?: "Low" | "Moderate" | "High"
+}
+
+type MedPayload = {
+  name: string
+  dosageForm?: string
+  frequency?: string
+  instructions?: string[]
+  category?: string
+  strength?: string
+  dose?: string
+  atc?: string
+}
 
 export default function MCIExcelActions({
   currentPatient,
+  meds,                 // NEW
 }: {
-  currentPatient: PatientPayload; // construct this from your form + MCI result
+  currentPatient: PatientPayload
+  meds: MedPayload[]
 }) {
-  const [busy, setBusy] = useState(false);
-  const [lastId, setLastId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<string | null>(null)
 
   const appendRow = async () => {
-    setBusy(true);
-    setError(null);
+    setBusy(true); setMsg(null)
     try {
       const res = await fetch("/api/excel/append", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ patient: currentPatient }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || "Append failed");
-      setLastId(data.patientId);
+        body: JSON.stringify({ patient: currentPatient, meds }), // send meds!
+      })
+      const data = await res.json()
+      if (!res.ok || !data.ok) throw new Error(data.error || "Append failed")
+      setMsg(`Saved ${currentPatient.name} (${data.patientId}), meds: ${data.medsAdded}`)
     } catch (e: any) {
-      setError(e?.message ?? "Unknown error");
+      setMsg(e?.message ?? "Unknown error")
     } finally {
-      setBusy(false);
+      setBusy(false)
     }
-  };
+  }
 
   const download = async () => {
-    const res = await fetch("/api/excel/file");
-    if (!res.ok) {
-      alert("No workbook yet. Append a row first.");
-      return;
-    }
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "Data_MCI.xlsx";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+    const res = await fetch("/api/excel/file")
+    if (!res.ok) { alert("No workbook yet. Append a row first."); return }
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "Data_MCI.xlsx"
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex flex-col gap-2">
       <button className="btn" disabled={busy} onClick={appendRow}>
-        {busy ? "Appending…" : "Append to Data_Rx"}
+        {busy ? "Appending…" : "Append to Data_Rx + Data_Meds"}
       </button>
-      <button className="btn" onClick={download}>
-        Download Excel
-      </button>
-      {lastId && <span className="text-sm opacity-70">Saved Patient ID: {lastId}</span>}
-      {error && <span className="text-sm text-red-500">{error}</span>}
+      <button className="btn" onClick={download}>Download Excel</button>
+      {msg && <span className="text-sm opacity-70">{msg}</span>}
     </div>
-  );
+  )
 }

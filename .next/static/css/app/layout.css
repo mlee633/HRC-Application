@@ -1575,9 +1575,6 @@ font-weight: 100 900;
   .text-primary-foreground {
     color: var(--primary-foreground);
   }
-  .text-red-500 {
-    color: var(--color-red-500);
-  }
   .text-red-600 {
     color: var(--color-red-600);
   }

@@ -23,6 +23,9 @@ export interface Medication {
   dosageForm: string
   frequency: string
   instructions: string[]
+  category?: string         // e.g., "Cardiovascular", "Diabetes", "Pain", etc.
+  strength?: string         // e.g., "500 mg"
+  dose?: string             // e.g., "1 tablet"         
 }
 
 export default function HomePage() {
@@ -441,7 +444,7 @@ export default function HomePage() {
               {/* Results + Excel Actions */}
               <div>
                 <ResultsDisplay results={results} isCalculating={isCalculating} />
-                <MCIExcelActions currentPatient={currentPatient} />
+                <MCIExcelActions currentPatient={currentPatient} meds={medications} />
               </div>
             </>
           )}
