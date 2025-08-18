@@ -1,18 +1,19 @@
 // app/api/excel/append/route.ts
 export const runtime = "nodejs";
 
-import { MedicationSchema, type MedicationRowInput } from "@/lib/dataRx";
-
 import { NextRequest, NextResponse } from "next/server";
+import { ensureDataDir, loadWorkbook, saveWorkbook } from "@/lib/excelServer";
+
 import {
   dataRxHeaders,
   medsHeaders,
+  PatientSchema,
   normalizePatient,
   toDataRxRow,
-  PatientSchema,
+  MedicationSchema,
+  type MedicationRowInput,
   toMedsRows,
 } from "@/lib/dataRx";
-import { ensureDataDir, loadWorkbook, saveWorkbook } from "@/lib/excelServer";
 
 const SHEET_PATIENTS = "Data_Rx";
 const SHEET_MEDS = "Data_Meds";
