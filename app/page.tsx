@@ -8,7 +8,7 @@ import { Calculator, Plus } from "lucide-react"
 import { MedicationForm } from "@/components/algorithms/mci/medication-form"
 import { ResultsDisplay } from "@/components/algorithms/mci/results-display"
 import { calculateMedicationScore } from "@/lib/algorithms/mci/scoring"
-import MCIExcelActions from "@/components/excel/MCIExcelActions"
+import FloatingSaveModal from "@/components/excel/FloatingSaveModal";
 
 import {
   AVAILABLE_ALGORITHMS,
@@ -444,13 +444,17 @@ export default function HomePage() {
               {/* Results + Excel Actions */}
               <div>
                 <ResultsDisplay results={results} isCalculating={isCalculating} />
-                <MCIExcelActions currentPatient={currentPatient} meds={medications} />
+                <FloatingSaveModal
+                  currentPatient={currentPatient}
+                  meds={medications}
+                  onSavePdf={handleSaveAsPDF}
+                />
               </div>
             </>
           )}
         </div>
 
-        {/* Footer + Save as PDF */}
+        {/* Footer + Save option */}
         <div className="mt-12">
           <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
             <p className="text-gray-600 text-sm leading-relaxed">
@@ -461,20 +465,6 @@ export default function HomePage() {
             </p>
           </div>
         </div>
-
-        <button
-          onClick={handleSaveAsPDF}
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "24px",
-            zIndex: 50,
-            boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
-          }}
-          className="bg-blue-600 text-white rounded-full px-5 py-3 font-medium hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
-          Save as PDF
-        </button>
       </div>
     </div>
   )

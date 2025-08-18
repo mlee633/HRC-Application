@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { AlertCircle, BarChart3, CheckCircle, TrendingUp } from 'lucide-react'
-// import { MCIResult } from "@/app/page"
 import { MCIResult } from "@/lib/algorithms/types"
 
 interface ResultsDisplayProps {
@@ -50,7 +49,6 @@ export function ResultsDisplay({ results, isCalculating }: ResultsDisplayProps) 
   if (!results) {
     return (
     <div className="bg-white rounded-lg shadow-sm border">
-      {/* Fixed Header - No longer floating */}
       <div className="bg-gray-700 text-white px-6 py-4 rounded-t-lg">
         <div className="flex items-center gap-3">
           <BarChart3 className="h-5 w-5" />

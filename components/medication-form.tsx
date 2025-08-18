@@ -197,7 +197,7 @@ export function MedicationForm({
                   </Select>
                 </div>
 
-                {/* Instructions - Made more compact */}
+                {/* Instructions */}
                 <div className="space-y-3">
                   <Label className="text-sm font-medium text-gray-700">Special Instructions</Label>
                   <div className="bg-gray-50 rounded-lg p-4 max-h-48 overflow-y-auto">

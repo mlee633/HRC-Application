@@ -98,16 +98,17 @@ export function MedicationForm({
                           </div>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent className="w-80">
-                        <p>The physical form of the medication. Different forms may affect the complexity:</p>
-                        <ul className="list-disc pl-4 mt-1 text-sm">
-                          <li>Tablets/Capsules: Standard oral medications</li>
-                          <li>Injections: Requires special administration</li>
-                          <li>Inhalers: May need specific technique</li>
-                          <li>Patches: Applied to skin for extended release</li>
-                          <li>Drops/Sprays: Require precise application</li>
-                        </ul>
-                      </TooltipContent>
+                        <TooltipContent
+                          side="top"
+                          align="center"
+                          className="max-w-sm rounded-lg bg-white p-4 shadow-lg border text-sm leading-relaxed"
+                        >
+                          <p className="font-semibold text-gray-900 mb-2">Dosage form</p>
+                          <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                            <li>Each dosage form is assigned a weight</li>
+                            <li>The weight contributes to the dosage form complexity score</li>
+                          </ul>
+                        </TooltipContent>
                     </Tooltip>
                   </div>
                   <Select
@@ -117,7 +118,7 @@ export function MedicationForm({
                     <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Select dosage form" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent side="bottom" avoidCollisions={false}>
                       {DOSAGE_FORMS.map((form) => (
                         <SelectItem key={form} value={form}>
                           {form}
@@ -139,14 +140,15 @@ export function MedicationForm({
                           </div>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent className="w-80">
-                        <p>How often the medication should be taken. Frequency affects complexity:</p>
-                        <ul className="list-disc pl-4 mt-1 text-sm">
-                          <li>Once daily: Simplest schedule</li>
-                          <li>Multiple times per day: Requires timing management</li>
-                          <li>As needed (PRN): Based on symptoms</li>
-                          <li>Weekly/Monthly: Less frequent but needs scheduling</li>
-                          <li>Variable schedule: May change based on conditions</li>
+                      <TooltipContent
+                        side="top"
+                        align="center"
+                        className="max-w-sm rounded-lg bg-white p-4 shadow-lg border text-sm leading-relaxed"
+                      >
+                        <p className="font-semibold text-gray-900 mb-2">Dosing frequency</p>
+                        <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                          <li>Each frequency value is multiplied by its weight</li>
+                          <li>Score contributes to overall complexity</li>
                         </ul>
                       </TooltipContent>
                     </Tooltip>
@@ -158,7 +160,7 @@ export function MedicationForm({
                     <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Select frequency" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent side="bottom" avoidCollisions={false}>
                       {FREQUENCIES.map((freq) => (
                         <SelectItem key={freq} value={freq}>
                           {freq}
