@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MessageCircle, X } from "lucide-react";
 
 type ChatMessage = {
@@ -13,6 +13,16 @@ export default function FloatingChatbot() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Ref to track bottom of messages
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll on new messages or loading state
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, loading]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -41,7 +51,7 @@ export default function FloatingChatbot() {
           content: data.reply || "Sorry, I couldn’t answer.",
         },
       ]);
-    } catch (err) {
+    } catch {
       setMessages([
         ...newMessages,
         {
@@ -113,6 +123,8 @@ export default function FloatingChatbot() {
                 Typing…
               </div>
             )}
+            {/* Auto-scroll anchor */}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}

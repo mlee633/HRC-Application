@@ -75,52 +75,75 @@ export default function HomePage() {
   }
 
   // ---- PDF ----
-  const handleSaveAsPDF = () => {
-    const doc = new jsPDF()
+const handleSaveAsPDF = () => {
+  const doc = new jsPDF();
 
-    // Patient demographics
-    doc.setFontSize(16)
-    doc.text("Patient Information", 20, 20)
-    doc.setFontSize(12)
-    doc.text(`Patient ID: ${demographics.patientId}`, 20, 35)
-    doc.text(`Name: ${demographics.firstName} ${demographics.lastName}`, 20, 45)
-    doc.text(`Age: ${demographics.age}`, 20, 55)
-    doc.text(`Sex: ${demographics.sex}`, 20, 65)
-    doc.text(`Medical Conditions: ${demographics.medicalConditions}`, 20, 75)
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
+  let yPos = margin;
 
-    // Medications
-    doc.text("Medications", 20, 85)
-    let yPos = 95
-    medications.forEach((med, index) => {
-      if (med.name) {
-        doc.text(`${index + 1}. ${med.name}`, 20, yPos)
-        doc.text(`   Form: ${med.dosageForm}`, 30, yPos + 10)
-        doc.text(`   Frequency: ${med.frequency}`, 30, yPos + 20)
-        if (med.instructions.length > 0) {
-          doc.text(`   Instructions: ${med.instructions.join(", ")}`, 30, yPos + 30)
-        }
-        yPos += 45
+  // Helper to safely add text with wrapping + auto new page
+  const addText = (text: string, x: number, yStep = 10) => {
+    const wrapped = doc.splitTextToSize(text, pageWidth - margin * 2);
+    wrapped.forEach((line: string) => {
+      if (yPos > pageHeight - margin) {
+        doc.addPage();
+        yPos = margin;
       }
-    })
-
-    // Results
-    if (results) {
-      doc.text("MCI Results", 20, yPos + 10)
-      doc.text(`Total Score: ${results.totalScore}`, 20, yPos + 25)
-      doc.text(`Risk Level: ${results.riskLevel}`, 20, yPos + 35)
-      doc.text(`Description: ${results.description}`, 20, yPos + 45)
-    }
-
-    const sanitizedName = `${demographics.firstName}_${demographics.lastName}`
-      .replace(/[^a-z0-9_]/gi, "_")
-      .toLowerCase()
-    const sanitizedId = demographics.patientId.replace(/[^a-z0-9_]/gi, "_")
-    const filename = sanitizedId
-      ? `${sanitizedId}_${sanitizedName}_mci_report.pdf`
-      : `${sanitizedName}_mci_report.pdf`
-
-    doc.save(filename)
+      doc.text(line, x, yPos);
+      yPos += yStep;
+    });
   }
+
+  // Patient demographics
+  doc.setFontSize(16);
+  addText("Patient Information", margin, 12);
+
+  doc.setFontSize(12);
+  addText(`Patient ID: ${demographics.patientId}`, margin);
+  addText(`Name: ${demographics.firstName} ${demographics.lastName}`, margin);
+  addText(`Age: ${demographics.age}`, margin);
+  addText(`Sex: ${demographics.sex}`, margin);
+  addText(`Medical Conditions: ${demographics.medicalConditions}`, margin);
+
+  // Medications
+  doc.setFontSize(14);
+  addText("Medications", margin, 12);
+  doc.setFontSize(12);
+
+  medications.forEach((med, index) => {
+    if (med.name) {
+      addText(`${index + 1}. ${med.name}`, margin);
+      if (med.dosageForm) addText(`Form: ${med.dosageForm}`, margin + 10);
+      if (med.frequency) addText(`Frequency: ${med.frequency}`, margin + 10);
+      if (med.instructions.length > 0) {
+        addText(`Instructions: ${med.instructions.join(", ")}`, margin + 10);
+      }
+    }
+  });
+
+  // Results
+  if (results) {
+    doc.setFontSize(14);
+    addText("MCI Results", margin, 12);
+    doc.setFontSize(12);
+    addText(`Total Score: ${results.totalScore}`, margin);
+    addText(`Risk Level: ${results.riskLevel}`, margin);
+    addText(`Description: ${results.description}`, margin);
+  }
+
+  // Filename sanitization
+  const sanitizedName = `${demographics.firstName}_${demographics.lastName}`
+    .replace(/[^a-z0-9_]/gi, "_")
+    .toLowerCase();
+  const sanitizedId = demographics.patientId.replace(/[^a-z0-9_]/gi, "_");
+  const filename = sanitizedId
+    ? `${sanitizedId}_${sanitizedName}_mci_report.pdf`
+    : `${sanitizedName}_mci_report.pdf`;
+
+  doc.save(filename);
+};
 
   // ---- Medications ----
   const addMedication = () => {
