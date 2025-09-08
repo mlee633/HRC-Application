@@ -9,6 +9,7 @@ import { MedicationForm } from "@/components/algorithms/mci/medication-form"
 import { ResultsDisplay } from "@/components/algorithms/mci/results-display"
 import { calculateMedicationScore } from "@/lib/algorithms/mci/scoring"
 import FloatingSaveModal from "@/components/excel/FloatingSaveModal";
+import FloatingChatbot from "@/components/chat/FloatingChatbot";
 
 import {
   AVAILABLE_ALGORITHMS,
@@ -466,6 +467,7 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+      <FloatingChatbot />
     </div>
   )
 }
