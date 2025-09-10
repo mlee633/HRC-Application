@@ -12,8 +12,8 @@ export async function GET(_req: NextRequest) {
   await ensureDataDir();
   try {
     const stat = await fs.stat(DATA_PATH);
-    const stream = await fs.readFile(DATA_PATH);
-    return new NextResponse(stream, {
+    const buffer = await fs.readFile(DATA_PATH);
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Length": String(stat.size),
