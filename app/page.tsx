@@ -394,7 +394,7 @@ const handleSaveAsPDF = () => {
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">Select</option>
-                  <option value="0">0 Least</option>
+                  <option value="0">0 None</option>
                   <option value="1">1</option>
                   <option value="2">2</option>
                   <option value="3">3</option>

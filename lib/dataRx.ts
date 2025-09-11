@@ -13,7 +13,6 @@ export const dataRxHeaders = [
   "Severity MRCI",
 ] as const;
 
-// NEW: meds sheet headers (one row per medication)
 export const medsHeaders = [
   "Patient ID",
   "Category",
@@ -61,7 +60,7 @@ export function toDataRxRow(n: ReturnType<typeof normalizePatient>): Record<stri
 // ---------- Medications mapping ----------
 
 export const MedicationSchema = z.object({
-  // These fields should match your UI Medication shape
+  // These fields should match UI Medication shape
   name: z.string().min(1),
   dosageForm: z.string().optional(),
   frequency: z.string().optional(),
