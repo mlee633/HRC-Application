@@ -41,10 +41,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { patient, meds } = body;
 
-    if (!patient?.id || !patient?.name) {
-      return new NextResponse("Patient id and name are required", {
-        status: 400,
-      });
+    if (!patient?.patientId || !patient?.name) {
+      return new NextResponse("Patient ID and name are required", { status: 400 });
     }
 
     // Build workbook in memory
@@ -53,18 +51,18 @@ export async function POST(req: NextRequest) {
 
     // Add patient info
     sheet.addRow(["Patient ID", "Patient Name"]);
-    sheet.addRow([patient.id, patient.name]);
+    sheet.addRow([patient.patientId, patient.name]);
     sheet.addRow([]);
 
     // Add medication table
     sheet.addRow(["Drug", "Dose", "Route", "Instructions"]);
     meds.forEach((med: any) => {
-      sheet.addRow([med.drug, med.dose, med.route, med.instructions]);
+      sheet.addRow([med.name, med.dose, med.dosageForm, (med.instructions || []).join(", ")]);
     });
 
     const buffer = await wb.xlsx.writeBuffer();
 
-    // Clean filename
+    // Safe filename
     const safeName = patient.name
       .trim()
       .toLowerCase()
@@ -75,7 +73,7 @@ export async function POST(req: NextRequest) {
       headers: {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="${patient.id}_${safeName}_excel.xlsx"`,
+        "Content-Disposition": `attachment; filename="${patient.patientId}_${safeName}_excel.xlsx"`,
         "Cache-Control": "no-store",
       },
     });
