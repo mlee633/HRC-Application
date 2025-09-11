@@ -1,4 +1,6 @@
 // // app/api/excel/append/route.ts
+// THIS VERSION IS WHEN YOU ARE USING IT LOCALLY - NOT ON VERCEL
+
 // export const runtime = "nodejs";
 
 // import { NextRequest, NextResponse } from "next/server";
@@ -57,6 +59,7 @@
 // }
 
 
+// ------------------------------------------------------------------------------ //
 // Trying to make it work for vercel
 // app/api/excel/append/route.ts
 export const runtime = "nodejs";

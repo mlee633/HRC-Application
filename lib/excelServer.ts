@@ -1,4 +1,6 @@
 // // lib/excelServer.ts
+// THIS VERSION IS WHEN YOU ARE USING IT LOCALLY - NOT ON VERCEL
+
 // import ExcelJS from "exceljs";
 // import fs from "node:fs/promises";
 // import path from "node:path";
@@ -25,7 +27,7 @@
 // }
 
 
-
+// ------------------------------------------------------------------------------ //
 // Trying to make it work for Vercel
 import ExcelJS from "exceljs";
 
