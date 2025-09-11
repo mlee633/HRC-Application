@@ -55,9 +55,15 @@ export async function POST(req: NextRequest) {
     sheet.addRow([]);
 
     // Add medication table
-    sheet.addRow(["Drug", "Dose", "Route", "Instructions"]);
+    sheet.addRow(["Medication Name", "Dosage Form", "Frequency", "Special Instructions"]);
+
     meds.forEach((med: any) => {
-      sheet.addRow([med.name, med.dose, med.dosageForm, (med.instructions || []).join(", ")]);
+      sheet.addRow([
+        med.name || "",
+        med.dosageForm || "",
+        med.frequency || "",
+        (med.instructions || []).join(", "),
+      ]);
     });
 
     const buffer = await wb.xlsx.writeBuffer();
