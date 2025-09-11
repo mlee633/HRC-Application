@@ -45,15 +45,13 @@ export async function POST(req: NextRequest) {
       return new NextResponse("Patient ID and name are required", { status: 400 });
     }
 
-    // Create workbook & sheet
     const wb = new ExcelJS.Workbook();
     const sheet = wb.addWorksheet("Patient Data");
 
     // ----------------------------
-    // Patient info section
+    // Patient info block
     // ----------------------------
     const patientInfo = [
-      ["Patient ID", patient.patientId],
       ["Patient Name", patient.name],
       ["Age", patient.age?.toString() || ""],
       ["Sex", patient.sex || ""],
@@ -64,34 +62,41 @@ export async function POST(req: NextRequest) {
     ];
 
     patientInfo.forEach((row) => sheet.addRow(row));
-    sheet.addRow([]); // blank line after patient info
+    sheet.addRow([]); // blank line
 
-    // Style first column (labels) bold
+    // Style patient info block
     for (let i = 1; i <= patientInfo.length; i++) {
-      const cell = sheet.getRow(i).getCell(1);
-      cell.font = { bold: true };
+      const labelCell = sheet.getRow(i).getCell(1);
+      labelCell.font = { bold: true };
+      labelCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFD9D9D9" }, // light gray background
+      };
+      labelCell.alignment = { vertical: "middle", horizontal: "left" };
     }
 
     // ----------------------------
     // Medication table
     // ----------------------------
-    sheet.columns = [
-      { header: "Medication Name", key: "name", width: 25 },
-      { header: "Dosage Form", key: "dosageForm", width: 20 },
-      { header: "Frequency", key: "frequency", width: 15 },
-      { header: "Special Instructions", key: "instructions", width: 40 },
-    ];
+    const headerRowIndex = patientInfo.length + 2; // after patient info + blank row
+    const headers = ["Medication Name", "Dosage Form", "Frequency", "Special Instructions"];
+    sheet.addRow(headers);
 
-    // Header row (after patient info + blank)
-    const headerRowIndex = patientInfo.length + 2; // e.g. row 10
+    // Set column widths
+    sheet.getColumn(1).width = 25;
+    sheet.getColumn(2).width = 25;
+    sheet.getColumn(3).width = 20;
+    sheet.getColumn(4).width = 50;
+
+    // Style header row
     const headerRow = sheet.getRow(headerRowIndex);
-
     headerRow.eachCell((cell) => {
-      cell.font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } }; // white bold text
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
       cell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "FF1F497D" }, // dark blue background
+        fgColor: { argb: "FF1F497D" }, // dark blue
       };
       cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
       cell.border = {
@@ -104,15 +109,15 @@ export async function POST(req: NextRequest) {
 
     // Add medication rows
     meds.forEach((med: any) => {
-      sheet.addRow({
-        name: med.name || "",
-        dosageForm: med.dosageForm || "",
-        frequency: med.frequency || "",
-        instructions: (med.instructions || []).join(", "),
-      });
+      sheet.addRow([
+        med.name || "",
+        med.dosageForm || "",
+        med.frequency || "",
+        (med.instructions || []).join(", "),
+      ]);
     });
 
-    // Style data rows
+    // Style medication rows
     sheet.eachRow((row, rowNumber) => {
       if (rowNumber > headerRowIndex) {
         row.eachCell((cell) => {
@@ -124,15 +129,15 @@ export async function POST(req: NextRequest) {
             right: { style: "thin" },
           };
         });
+        row.height = 30; // auto-expand a bit
       }
     });
 
     // ----------------------------
-    // Export as buffer
+    // Send file
     // ----------------------------
     const buffer = await wb.xlsx.writeBuffer();
 
-    // Safe filename
     const safeName = patient.name
       .trim()
       .toLowerCase()
