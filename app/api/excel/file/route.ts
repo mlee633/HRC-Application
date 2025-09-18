@@ -30,11 +30,20 @@
 
 
 // ------------------------------------------------------------------------------ //
-// Trying to make it work for Vercel
+// Trying to make it work for Vercelexport const runtime = "nodejs";
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
+import nodemailer from "nodemailer";
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS,
+  },
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -62,16 +71,15 @@ export async function POST(req: NextRequest) {
     ];
 
     patientInfo.forEach((row) => sheet.addRow(row));
-    sheet.addRow([]); // blank line
+    sheet.addRow([]);
 
-    // Style patient info block
     for (let i = 1; i <= patientInfo.length; i++) {
       const labelCell = sheet.getRow(i).getCell(1);
       labelCell.font = { bold: true };
       labelCell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "FFD9D9D9" }, // light gray background
+        fgColor: { argb: "FFD9D9D9" },
       };
       labelCell.alignment = { vertical: "middle", horizontal: "left" };
     }
@@ -79,24 +87,22 @@ export async function POST(req: NextRequest) {
     // ----------------------------
     // Medication table
     // ----------------------------
-    const headerRowIndex = patientInfo.length + 2; // after patient info + blank row
+    const headerRowIndex = patientInfo.length + 2;
     const headers = ["Medication Name", "Dosage Form", "Frequency", "Special Instructions"];
     sheet.addRow(headers);
 
-    // Set column widths
     sheet.getColumn(1).width = 25;
     sheet.getColumn(2).width = 25;
     sheet.getColumn(3).width = 20;
     sheet.getColumn(4).width = 50;
 
-    // Style header row
     const headerRow = sheet.getRow(headerRowIndex);
     headerRow.eachCell((cell) => {
       cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
       cell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "FF1F497D" }, // dark blue
+        fgColor: { argb: "FF1F497D" },
       };
       cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
       cell.border = {
@@ -107,7 +113,6 @@ export async function POST(req: NextRequest) {
       };
     });
 
-    // Add medication rows
     meds.forEach((med: any) => {
       sheet.addRow([
         med.name || "",
@@ -117,7 +122,6 @@ export async function POST(req: NextRequest) {
       ]);
     });
 
-    // Style medication rows
     sheet.eachRow((row, rowNumber) => {
       if (rowNumber > headerRowIndex) {
         row.eachCell((cell) => {
@@ -129,12 +133,46 @@ export async function POST(req: NextRequest) {
             right: { style: "thin" },
           };
         });
-        row.height = 30; // auto-expand a bit
+        row.height = 30;
       }
     });
 
     // ----------------------------
-    // Send file
+    // Notification with Nodemailer
+    // ----------------------------
+    const mrci = Number(patient.overallMRCI);
+    const consent = Boolean(patient.consentToNotify);
+    const recipients = [patient.caregiverEmail, patient.gpEmail].filter(Boolean);
+
+    if (mrci >= 15 && consent && recipients.length > 0) {
+      const medSummary =
+        meds && meds.length > 0
+          ? meds
+              .map((m: any, i: number) => {
+                const instr = m.instructions?.length
+                  ? `Instructions: ${m.instructions.join(", ")}`
+                  : "";
+                return `${i + 1}. ${m.name || "Unnamed"} — ${m.dosageForm || "N/A"} — ${
+                  m.frequency || "N/A"
+                }\n   ${instr}`;
+              })
+              .join("\n\n")
+          : "No medications recorded.";
+
+      try {
+        await transporter.sendMail({
+          from: process.env.GMAIL_USER,
+          to: recipients,
+          subject: `High MRCI Alert: ${patient.name}`,
+          text: `Patient ${patient.name} (${patient.patientId}) has an MRCI score of ${mrci}, indicating high regimen complexity.\n\nMedications:\n${medSummary}`,
+        });
+      } catch (err) {
+        console.error("Email send FAILED:", err);
+      }
+    }
+
+    // ----------------------------
+    // Send Excel file
     // ----------------------------
     const buffer = await wb.xlsx.writeBuffer();
 

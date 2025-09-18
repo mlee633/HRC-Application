@@ -12,6 +12,14 @@ import FloatingSaveModal from "@/components/excel/FloatingSaveModal";
 import FloatingChatbot from "@/components/chat/FloatingChatbot";
 
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
+
+import {
   AVAILABLE_ALGORITHMS,
   ALGORITHM_COPY,
   type AlgorithmId,
@@ -30,6 +38,7 @@ export interface Medication {
 }
 
 export default function HomePage() {
+  const [warningOpen, setWarningOpen] = useState(false)
   const mapSex = (s: string): "M" | "F" | "Other" =>
     s === "Male" ? "M" : s === "Female" ? "F" : "Other"
 
@@ -52,7 +61,11 @@ export default function HomePage() {
     ethnicity: "",
     medicalConditions: "",
     deprivationScore: "",
+    caregiverEmail: "",
+    gpEmail: "",
+    consentToNotify: false,
   })
+
 
   const handleDemographicsChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -71,6 +84,9 @@ export default function HomePage() {
       ethnicity: "",
       medicalConditions: "",
       deprivationScore: "",
+      caregiverEmail: "",
+      gpEmail: "",
+      consentToNotify: false,
     })
   }
 
@@ -219,6 +235,11 @@ const handleSaveAsPDF = () => {
     })
 
     setIsCalculating(false)
+
+    // Show warning if high MRCI and no consent
+    if (totalScore >= 10 && !demographics.consentToNotify) {
+      setWarningOpen(true)
+    }
   }
 
   const hasValidMedications = medications.some(
@@ -243,6 +264,9 @@ const handleSaveAsPDF = () => {
     dateOfParticipation: new Date().toISOString().split("T")[0],
     overallMRCI: results?.totalScore ?? 0,                 // fallback to 0
     severityMRCI: results?.riskLevel ?? "Low",             // fallback to Low
+    caregiverEmail: demographics.caregiverEmail || "",
+    gpEmail: demographics.gpEmail || "",
+    consentToNotify: demographics.consentToNotify || false,
   }
 
   return (
@@ -305,6 +329,7 @@ const handleSaveAsPDF = () => {
               </Button>
             </div>
 
+            {/* First row: ID, First/Last Name, Age */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Patient ID</label>
@@ -349,7 +374,8 @@ const handleSaveAsPDF = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Second row: Sex, Ethnicity, Medical Conditions, Deprivation Score */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Sex</label>
                 <select
@@ -402,6 +428,50 @@ const handleSaveAsPDF = () => {
                   <option value="5">5 Most</option>
                 </select>
               </div>
+            </div>
+
+            {/* Third row: Caregiver + GP Emails */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Caregiver Email</label>
+                <input
+                  type="email"
+                  name="caregiverEmail"
+                  value={demographics.caregiverEmail}
+                  onChange={handleDemographicsChange}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">GP Email</label>
+                <input
+                  type="email"
+                  name="gpEmail"
+                  value={demographics.gpEmail}
+                  onChange={handleDemographicsChange}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+            </div>
+
+            {/* Consent Checkbox */}
+            <div className="mt-4 flex items-center">
+              <input
+                id="consentToNotify"
+                type="checkbox"
+                name="consentToNotify"
+                checked={demographics.consentToNotify}
+                onChange={(e) =>
+                  setDemographics((prev) => ({
+                    ...prev,
+                    consentToNotify: e.target.checked,
+                  }))
+                }
+                className="mr-2"
+              />
+              <label htmlFor="consentToNotify" className="text-sm text-gray-700">
+                I consent to sending alerts to my caregiver and GP
+              </label>
             </div>
           </div>
         </div>
@@ -490,6 +560,28 @@ const handleSaveAsPDF = () => {
           </div>
         </div>
       </div>
+      {/* ⚠️ High MRCI Warning Dialog */}
+      <Dialog open={warningOpen} onOpenChange={setWarningOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>⚠️ High MRCI – No Notification Sent</DialogTitle>
+            <DialogDescription>
+              This patient’s MRCI score is <strong>High</strong>, but no caregiver/GP
+              notification will be sent because consent was not given. Please follow up manually.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end mt-4">
+            <button
+              type="button"
+              onClick={() => setWarningOpen(false)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              OK
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <FloatingChatbot />
     </div>
   )

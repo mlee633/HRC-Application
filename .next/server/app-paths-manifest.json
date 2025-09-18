@@ -1,3 +1,4 @@
 {
+  "/api/excel/file/route": "app/api/excel/file/route.js",
   "/page": "app/page.js"
 }

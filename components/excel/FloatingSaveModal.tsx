@@ -208,6 +208,9 @@ export type PatientPayload = {
   dateOfParticipation: string
   overallMRCI?: number
   severityMRCI?: "Low" | "Moderate" | "High"
+  caregiverEmail?: string
+  gpEmail?: string
+  consentToNotify?: boolean
 }
 
 export type MedPayload = {
@@ -236,6 +239,7 @@ export default function FloatingSaveModal({
 }: Props) {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [warningOpen, setWarningOpen] = useState(false)
 
   const summary = useMemo(
     () => ({
@@ -251,6 +255,12 @@ export default function FloatingSaveModal({
   )
 
   const downloadExcel = async () => {
+    // 🚨 Show warning if high MRCI and no consent
+    if ((currentPatient.overallMRCI ?? 0) >= 15 && !currentPatient.consentToNotify) {
+      setWarningOpen(true)
+      return
+    }
+
     setBusy(true)
     try {
       const res = await fetch("/api/excel/file", {
@@ -289,6 +299,7 @@ export default function FloatingSaveModal({
 
   return (
     <div className={cn("fixed bottom-6 right-6 z-50", className)}>
+      {/* Save Options Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <button
@@ -362,6 +373,28 @@ export default function FloatingSaveModal({
                 Download Excel
               </button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Warning Dialog */}
+      <Dialog open={warningOpen} onOpenChange={setWarningOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>⚠️ High MRCI – No Notification Sent</DialogTitle>
+            <DialogDescription>
+              This patient’s MRCI score is <strong>High</strong>, but no caregiver/GP notification
+              will be sent because consent was not given. Please follow up manually.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end mt-4">
+            <button
+              type="button"
+              onClick={() => setWarningOpen(false)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              OK
+            </button>
           </div>
         </DialogContent>
       </Dialog>
