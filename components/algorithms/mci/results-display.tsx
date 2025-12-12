@@ -2,8 +2,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
 import { AlertCircle, BarChart3, CheckCircle, TrendingUp } from 'lucide-react'
 import { type MCIResult } from "@/lib/algorithms/types"
 
@@ -13,20 +11,6 @@ interface ResultsDisplayProps {
 }
 
 export function ResultsDisplay({ results, isCalculating }: ResultsDisplayProps) {
-  const getComplexityColor = (level: string) => {
-    switch (level) {
-      case "Low": return "bg-green-500"
-      case "Moderate": return "bg-yellow-500"
-      case "High": return "bg-red-500"
-      default: return "bg-gray-500"
-    }
-  }
-
-  const getScoreColor = (score: number) => {
-    if (score <= 5) return "text-green-600"
-    if (score <= 10) return "text-yellow-600"
-    return "text-red-600"
-  }
 
   if (isCalculating) {
     return (
@@ -92,52 +76,13 @@ export function ResultsDisplay({ results, isCalculating }: ResultsDisplayProps) 
         </div>
         
         <div className="p-6">
-          <div className="text-center mb-8">
-            <div className={`text-7xl font-bold mb-4 ${getScoreColor(results.totalScore)}`}>
+          <div className="text-center mb-4">
+            <div className="text-7xl font-bold mb-4 text-slate-800">
               {results.totalScore.toFixed(1)}
             </div>
-            <Badge 
-              className={`${getComplexityColor(results.riskLevel)} text-white px-6 py-3 text-lg font-semibold rounded-full`}
-            >
-              {results.riskLevel} Complexity
-            </Badge>
-            <p className="text-slate-600 mt-3 text-lg">{results.description}</p>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span>Complexity Level</span>
-                <span>{results.totalScore.toFixed(1)}/20+</span>
-              </div>
-              <Progress 
-                value={Math.min((results.totalScore / 20) * 100, 100)} 
-                className="h-3"
-              />
-            </div>
-
-            <Separator />
-
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-slate-800">
-                  {results.medications.length}
-                </div>
-                <div className="text-sm text-slate-600">Medications</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-blue-600">
-                  {(results.totalScore / results.medications.length).toFixed(1)}
-                </div>
-                <div className="text-sm text-slate-600">Avg per Med</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-slate-800">
-                  {results.riskLevel}
-                </div>
-                <div className="text-sm text-slate-600">Risk Level</div>
-              </div>
-            </div>
+            <p className="text-slate-500 text-sm">
+              Final Medication Complexity Index score
+            </p>
           </div>
         </div>
       </div>
@@ -159,7 +104,7 @@ export function ResultsDisplay({ results, isCalculating }: ResultsDisplayProps) 
               <div key={med.id} className="border border-slate-200 rounded-xl p-6 bg-white shadow-sm">
                 <div className="flex justify-between items-start mb-4">
                   <h4 className="text-lg font-semibold text-slate-800">{med.name}</h4>
-                  <Badge variant="outline" className={`${getScoreColor(med.score)} border-current px-3 py-1 font-semibold`}>
+                  <Badge variant="outline" className="text-slate-700 border-slate-300 px-3 py-1 font-semibold">
                     {med.score.toFixed(1)} points
                   </Badge>
                 </div>
